@@ -1,34 +1,44 @@
-from pickletools import read_uint1
-import re
-from flask import Flask, session
+from datetime import datetime
+from flask import Flask
 from flask import render_template
 from flask import url_for
 from flask import jsonify
 from flask import request
 from flask import redirect
+from forms import TaskForm
 
-from config import Config
-from flask_sqlalchemy import SQLAlchemy
+from ast import stmt
+from models import Task, engine
+
+from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 app=Flask(__name__)
-app.config.from_object(Config)
-
-db = SQLAlchemy(app)
-
-import models # Se importa aca porque sino genera un error al depender de la variable 'db'
-from forms import TaskForm
 
 @app.route('/')
 def index():
     title = 'PyVUEFlask Todo App'
-    tasks = models.Task.query.all()
 
-    # Si es un Get que pide los datos retorna un JSON, sino rederiza el Index.html
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify(tasks)
+    with Session(engine) as session:
+        stmt = select(Task).order_by(Task.date.desc())
+        tasks = session.scalars(stmt)
+        
+        tasks_dict = {}
+        format_data = "%d/%m/%y %H:%M:%S"
+        for task in tasks:
+            print(type(task.date))
+            tasks_dict[str(task.id)] = {
+                'id': task.id, 
+                'title': task.title, 
+                'date': task.date.strftime("%d/%m/%Y %H:%M:%S"), 
+                'completed': task.completed
+                }
+        
+        # Si es un Get que pide los datos retorna un JSON, sino rederiza el Index.html
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(tasks_dict)
     
     return render_template('index.html', title=title)
-
 
 @app.route('/add', methods=['POST'])
 def add():
@@ -37,9 +47,10 @@ def add():
     form = TaskForm(data=user_input)
 
     if form.validate():
-        task = models.Task(title=form.title.data)
-        db.session.add(task)
-        db.session.commit()
+        with Session(engine) as session:
+            task = Task(title=form.title.data)
+            session.add(task)
+            session.commit()
 
         return jsonify(task)
 
@@ -47,22 +58,23 @@ def add():
 
 @app.route('/delete', methods=['POST'])
 def delete():
-    id = request.get_json().get('id')
-    task = models.Task.query.filter_by(id=id).first()
-
-    db.session.delete(task)
-    db.session.commit()
+    id_task = request.get_json().get('id')
+    with Session(engine) as session:
+        stmt = select(Task).where(Task.id == id_task)
+        task_del = session.scalars(stmt).one()   
+        session.delete(task_del)
+        session.commit()
 
     return jsonify({'result': 'Ok'}), 200
 
-
 @app.route('/complete', methods=['POST'])
 def complete():
-    id = request.get_json().get('id')
-    task = models.Task.query.filter_by(id=id).first()
-
-    db.session.add(task)
-    db.session.commit()
+    id_task = request.get_json().get('id')
+    with Session(engine) as session:
+        stmt = select(Task).where(Task.id == id_task)
+        task = session.scalars(stmt).one()   
+        task.completed = not task.completed
+        session.commit()
 
     return jsonify({'result': 'Ok'}), 200
 
