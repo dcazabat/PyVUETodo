@@ -11,8 +11,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" defer></script>
 
-    <!-- VueJS js Online -->
-    <script src="https://unpkg.com/vue@3"></script>
+    <!-- VueJS js -->
+    <!-- <script src="{{ url_for('static', filename='js/vue.global.js') }}"></script> -->
+    <script type="importmap">
+        {
+          "imports": {
+            "vue": "{{ url_for('static', filename='js/vue.esm-browser.js') }}"
+          }
+        }
+    </script>
 
     <!-- Carga de CSS y JS propios -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -20,9 +27,9 @@
     <title>{{ title }}</title>
 </head>
 <body class="bg-light">
-    <div class="container">
+    <div class="container-sm">
         <div class="row">
-            <div class="col-6 mx-auto mt-5">
+            <div class="col-md-6 mx-auto mt-5">
                 {% block content %}
                 {% endblock %}
             </div>
@@ -30,6 +37,7 @@
     </div>
 
     <!-- Se Coloca aqui porque no debe carga antes de Vue y el block de Flask esten cargados -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='js/main.js') }}"></script> -->
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
