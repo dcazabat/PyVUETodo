@@ -7,29 +7,34 @@
     <div id="app">
         <form @submit.prevent="addTask">
             <div class="form-group row">
-                <div class="col-9">
+                <div class="col-10">
                     <label for="">Agregar Nueva Nota</label>
                     <input type="text" class="form-control" v-model="task.title" required>
                 </div>
-                <div class="col-auto mt-auto">
-                    <button class="btn btn-success" type="submit">Agregar</button>
+                <div class="col-2 mt-auto d-flex align-items-center">
+                    <!-- <i class="bi bi-clipboard-plus-fill" @click="addTask()"></i> -->
+                    <button class="btn btn-success bi bi-clipboard-plus-fill" type="submit">
+                    </button>
                 </div>
             </div>
         </form>
 
         <div class="mt-5">
             <div class="card mb-3" v-for="task, index in tasks" :key="index"
-            :class="{'text-bg-info':task.completed}">
+            :class="{'text-bg-dark':task.completed}">
                 <div class="card-header">
                     Fecha: { task.date }
                 </div>
                 <div class="card-body row justify-content-between px-4" 
                     @dblclick="completeTask(task)" >
-                    <div class="col align-middle">
+                    <div class="col-auto align-middle">
                         { task.title }
                     </div>
-                    <div class="col-1">
-                        <button type="submit" class="btn btn-outline-danger" @click="deleteTask(task)">X</button>
+                    <div class="col-3 d-flex align-items-start">
+                        <button class="btn btn-warning btn-sm bi bi-clipboard2-check-fill " @click="completeTask(task)"></button>
+                        <button class="btn btn-danger btn-sm bi bi-clipboard2-x-fill" @click="deleteTask(task)"></button>
+                        <!-- <i class="bi bi-clipboard2-check-fill m-1" @click="completeTask(task)"></i>
+                        <i class="bi bi-clipboard2-x-fill m-1" @click="deleteTask(task)"></i> -->
                     </div>
                 </div>
             </div>
